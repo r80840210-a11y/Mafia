@@ -1,23 +1,41 @@
-# StandFade Telegram Mini App
+# Mafia Online
 
-Проект Telegram Mini App на Node.js, Express, Prisma и PostgreSQL.
+## Что уже есть
+- Регистрация и вход.
+- Пароли хранятся в виде bcrypt-хеша.
+- SQLite база создаётся автоматически.
+- Профиль и рейтинг.
+- Онлайн-комнаты на 4–10 игроков.
+- Коды комнат.
+- Готовность игроков и передача host.
+- Роли: Мирный, Мафия, Дон, Комиссар, Доктор, Маньяк.
+- Ночь/день.
+- Ночные действия.
+- Голосование.
+- Чат.
+- Проверка победы.
+- Сохранение статистики.
 
-## Структура папок и файлов:
-- `server.js` — Главный файл сервера Express
-- `prisma/schema.prisma` — Схема базы данных PostgreSQL
-- `.env.example` — Пример настроек окружения
-- `.gitignore` — Исключения для Git
-- `package.json` — Зависимости и скрипты
-- `public/index.html` — Фронтенд (Telegram Mini App UI)
+## Запуск
 
-## Инструкция по загрузке на GitHub:
-1. Создайте новый репозиторий на GitHub.
-2. В папке проекта выполните команды:
-   ```bash
-   git init
-   git add .
-   git commit -m "Initial commit for StandFade"
-   git branch -M main
-   git remote add origin YOUR_REPOSITORY_URL
-   git push -u origin main
-   ```
+Нужен Node.js 18+.
+
+В папке проекта:
+
+```bash
+npm install
+npm start
+```
+
+Открой:
+
+http://localhost:3000
+
+Для игры по локальной сети открой порт 3000 на компьютере и используй IP компьютера, например:
+
+http://192.168.1.10:3000
+
+Для настоящей игры через интернет сервер нужно разместить на хостинге, поддерживающем Node.js/WebSocket.
+
+## Важно
+Это стартовая рабочая версия проекта. Перед публичным запуском нужно включить HTTPS, Secure cookies, нормальный SESSION_SECRET и добавить rate limiting/CSRF-защиту.

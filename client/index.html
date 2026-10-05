@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Mafia Online</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+  <section id="auth" class="screen">
+    <div class="hero"><div class="logo">MAFIA<span>ONLINE</span></div><p>Город засыпает. Игра начинается.</p></div>
+    <div class="auth-card">
+      <div class="tabs"><button class="tab active" data-tab="login">Войти</button><button class="tab" data-tab="register">Регистрация</button></div>
+      <form id="loginForm">
+        <input id="loginUser" placeholder="Логин" autocomplete="username" required>
+        <input id="loginPass" type="password" placeholder="Пароль" autocomplete="current-password" required>
+        <button class="primary">ВОЙТИ</button>
+      </form>
+      <form id="registerForm" hidden>
+        <input id="regUser" placeholder="Логин" required>
+        <input id="regNick" placeholder="Никнейм" required>
+        <input id="regPass" type="password" placeholder="Пароль (минимум 6)" required>
+        <input id="regPass2" type="password" placeholder="Повтор пароля" required>
+        <button class="primary">СОЗДАТЬ АККАУНТ</button>
+      </form>
+      <div id="authMsg" class="msg"></div>
+    </div>
+  </section>
+
+  <section id="menu" class="screen" hidden>
+    <header><div class="logo small">MAFIA<span>ONLINE</span></div><div class="userbar">👤 <b id="meNick"></b> <button id="logout" class="ghost">Выйти</button></div></header>
+    <div class="menu-grid">
+      <button id="createBtn" class="big-card">🏠<b>Создать комнату</b><small>Играй с друзьями онлайн</small></button>
+      <button id="joinBtn" class="big-card">🔑<b>Войти в комнату</b><small>По коду комнаты</small></button>
+      <button id="localBtn" class="big-card">📱<b>Локальная игра</b><small>Одно устройство</small></button>
+      <button id="ratingBtn" class="big-card">🏆<b>Рейтинг</b><small>Лучшие игроки</small></button>
+    </div>
+    <div class="profile-mini">Рейтинг <b id="rating"></b> · Игр <b id="games"></b> · Побед <b id="wins"></b></div>
+  </section>
+
+  <section id="room" class="screen" hidden>
+    <header><button id="backMenu" class="ghost">← Меню</button><div>Комната <b id="roomCode"></b></div></header>
+    <main class="game-layout">
+      <aside class="panel"><h3>Игроки</h3><div id="players"></div><button id="readyBtn" class="primary">ГОТОВ</button><button id="startBtn" class="secondary" hidden>НАЧАТЬ ИГРУ</button></aside>
+      <section class="panel game-panel">
+        <div id="phase" class="phase">ЛОББИ</div><div id="timer" class="timer">—</div>
+        <div id="roleBox" class="role-box" hidden></div>
+        <div id="notices" class="notices"></div>
+        <div id="actions"></div>
+        <div class="chat"><div id="chatMessages"></div><form id="chatForm"><input id="chatInput" maxlength="300" placeholder="Сообщение..."><button>➤</button></form></div>
+      </section>
+    </main>
+  </section>
+</div>
+<div id="modal" class="modal" hidden><div class="modal-card"><h2 id="modalTitle"></h2><div id="modalBody"></div><button id="modalClose" class="ghost">Закрыть</button></div></div>
+<script src="/socket.io/socket.io.js"></script><script src="game.js"></script>
+</body>
+</html>
