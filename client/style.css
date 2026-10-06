@@ -407,3 +407,26 @@ input:focus,select:focus,textarea:focus{border-color:var(--purple);box-shadow:0 
   50% { transform: translateY(-8px); }
 }
 
+
+
+/* AUTH TABS FIX */
+.auth-tabs { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:20px; }
+.auth-tab { cursor:pointer; pointer-events:auto; position:relative; z-index:5; }
+.auth-tab.active { box-shadow:0 0 18px rgba(147,51,234,.25); }
+
+/* ==================== AUTH 2.0 ==================== */
+.auth-screen{position:relative;min-height:100vh;width:100%;display:flex;align-items:center;justify-content:center;padding:24px;overflow:auto;background:radial-gradient(circle at 20% 10%,rgba(124,58,237,.25),transparent 35%),radial-gradient(circle at 85% 90%,rgba(59,130,246,.2),transparent 35%),#060914}
+.auth-bg{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+.auth-bg span{position:absolute;width:280px;height:280px;border-radius:50%;filter:blur(80px);opacity:.25;background:#7c3aed}
+.auth-bg span:nth-child(1){left:-100px;top:-80px}.auth-bg span:nth-child(2){right:-100px;bottom:-100px;background:#2563eb}.auth-bg span:nth-child(3){left:50%;top:45%;background:#db2777}
+.auth-card{position:relative;z-index:2;width:min(460px,100%);padding:30px;border:1px solid rgba(148,163,184,.2);border-radius:24px;background:rgba(12,18,35,.94);box-shadow:0 25px 80px rgba(0,0,0,.55);backdrop-filter:blur(18px)}
+.auth-brand{display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:24px}.auth-logo{width:62px;height:62px;display:grid;place-items:center;border-radius:18px;background:linear-gradient(135deg,#7c3aed,#2563eb);font-size:32px;box-shadow:0 10px 30px rgba(124,58,237,.3)}
+.auth-title{font-size:32px;font-weight:1000;letter-spacing:4px}.auth-subtitle{font-size:11px;color:#a78bfa;letter-spacing:5px;margin-top:2px}
+.auth-tabs{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:5px;margin-bottom:25px;border-radius:13px;background:#080d1c;border:1px solid rgba(255,255,255,.08)}
+.auth-tab{padding:13px 8px!important;border-radius:9px!important;background:transparent!important;color:#94a3b8!important;font-weight:800;border:0!important;box-shadow:none!important}.auth-tab:hover{color:#fff!important;background:rgba(255,255,255,.05)!important}.auth-tab.active{color:#fff!important;background:linear-gradient(135deg,#7c3aed,#4f46e5)!important;box-shadow:0 6px 18px rgba(124,58,237,.3)!important}
+.auth-heading{text-align:center;margin-bottom:22px}.auth-heading h2{font-size:24px;margin-bottom:6px}.auth-heading p{font-size:13px;color:#94a3b8}
+.auth-form{display:block}.auth-form .form-group{margin-bottom:15px}.auth-form label{display:block;margin-bottom:7px;font-size:13px;font-weight:700;color:#dbeafe}.auth-form input{width:100%;height:48px;padding:0 14px;border-radius:11px;background:#080d1c!important;border:1px solid #26334d!important;color:#fff!important;transition:.2s}.auth-form input:focus{border-color:#8b5cf6!important;box-shadow:0 0 0 3px rgba(139,92,246,.13)}.auth-form input::placeholder{color:#64748b}.auth-form small{display:block;margin-top:6px;color:#64748b;font-size:11px}
+.password-wrap{position:relative}.password-wrap input{padding-right:85px}.password-toggle{position:absolute;right:5px;top:5px;height:38px;padding:0 10px!important;background:rgba(124,58,237,.12)!important;color:#c4b5fd!important;border-radius:8px!important;font-size:11px!important}.password-toggle:hover{background:rgba(124,58,237,.25)!important}
+.auth-submit{width:100%;height:50px;margin-top:8px!important;border-radius:11px!important;background:linear-gradient(135deg,#7c3aed,#4f46e5)!important;font-weight:900!important;letter-spacing:.5px}.auth-submit:hover{transform:translateY(-1px);box-shadow:0 10px 25px rgba(124,58,237,.3)}.auth-submit:disabled{opacity:.6;cursor:not-allowed;transform:none}
+.auth-message{min-height:4px;margin:4px 0}.auth-error{padding:11px 12px;border-radius:10px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.35);color:#fca5a5;font-size:13px;margin-bottom:10px}.auth-bottom{text-align:center;color:#64748b;font-size:13px;margin-top:18px}.auth-link{padding:0!important;background:transparent!important;color:#a78bfa!important;font-weight:800!important}.auth-link:hover{color:#c4b5fd!important;text-decoration:underline}
+@media(max-width:520px){.auth-screen{padding:12px}.auth-card{padding:22px 17px;border-radius:18px}.auth-title{font-size:27px}.auth-logo{width:54px;height:54px;font-size:27px}}

@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS users (
   last_survivor INT DEFAULT 0,
   rating INT DEFAULT 1000,
   favorite_role VARCHAR(20),
+  settings TEXT DEFAULT '{"sound":true,"music":true,"lang":"ru"}',
   last_login TIMESTAMP,
   created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP DEFAULT NOW()

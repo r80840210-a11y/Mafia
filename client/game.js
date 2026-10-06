@@ -5,7 +5,7 @@ class MafiaGame {
     this.user = null;
     this.room = null;
     this.mode = 'auth';
-    this.authMode = 'login';
+    this.authMode = 'register';
     this.loading = false;
     this.shop = {
       skins: [
@@ -80,177 +80,180 @@ class MafiaGame {
   }
 
   renderAuth() {
-    const isLogin = this.authMode === 'login';
     return `
-      <div class="auth-screen">
-        <div class="auth-bg">
-          <div class="auth-blob blob1"></div>
-          <div class="auth-blob blob2"></div>
-          <div class="auth-blob blob3"></div>
-        </div>
-        <div class="auth-container">
-          <div class="auth-header">
+      <main class="auth-screen">
+        <div class="auth-bg"><span></span><span></span><span></span></div>
+        <section class="auth-card">
+          <div class="auth-brand">
             <div class="auth-logo">🎭</div>
-            <h1 class="auth-title">MAFIA</h1>
-            <div class="auth-subtitle">ONLINE</div>
-          </div>
-          <div class="auth-form">
-            <div class="auth-tabs">
-              <button class="auth-tab ${isLogin ? 'active' : ''}" onclick="window.game.switchAuthMode('login')">Вход</button>
-              <button class="auth-tab ${!isLogin ? 'active' : ''}" onclick="window.game.switchAuthMode('register')">Регистрация</button>
+            <div>
+              <div class="auth-title">MAFIA</div>
+              <div class="auth-subtitle">ONLINE</div>
             </div>
-            <div id="authContent">${this.renderAuthContent()}</div>
           </div>
-        </div>
-      </div>
+
+          <div class="auth-tabs" role="tablist">
+            <button type="button" class="auth-tab ${this.authMode === 'register' ? 'active' : ''}" data-auth-mode="register">Регистрация</button>
+            <button type="button" class="auth-tab ${this.authMode === 'login' ? 'active' : ''}" data-auth-mode="login">Вход</button>
+          </div>
+
+          <div class="auth-heading">
+            <h2>${this.authMode === 'register' ? 'Создать аккаунт' : 'С возвращением'}</h2>
+            <p>${this.authMode === 'register' ? 'Зарегистрируйся и начни играть' : 'Войди в свой аккаунт Mafia Online'}</p>
+          </div>
+
+          <div id="authContent">${this.renderAuthContent()}</div>
+        </section>
+      </main>
     `;
   }
 
   switchAuthMode(mode) {
+    if (mode !== 'register' && mode !== 'login') return;
     this.authMode = mode;
-    const content = document.getElementById('authContent');
-    if (content) {
-      content.innerHTML = this.renderAuthContent();
-      this.attachHandlers();
-    }
+    this.loading = false;
+    this.render();
+    const first = document.querySelector('#authContent input');
+    if (first) setTimeout(() => first.focus(), 0);
   }
 
   renderAuthContent() {
-    const isLogin = this.authMode === 'login';
-    let html = '';
-    
-    if (isLogin) {
-      html = `
-        <form id="loginForm" onsubmit="window.game.doLogin(event); return false;">
+    if (this.authMode === 'login') {
+      return `
+        <form id="loginForm" class="auth-form" novalidate>
           <div class="form-group">
-            <label>Логин</label>
-            <input type="text" id="loginUsername" placeholder="player123" required>
+            <label for="loginUsername">Логин</label>
+            <input id="loginUsername" name="username" type="text" autocomplete="username" maxlength="20" placeholder="Например: player123" required>
           </div>
           <div class="form-group">
-            <label>Пароль</label>
-            <input type="password" id="loginPassword" placeholder="••••••••" required>
+            <label for="loginPassword">Пароль</label>
+            <div class="password-wrap">
+              <input id="loginPassword" name="password" type="password" autocomplete="current-password" maxlength="64" placeholder="Введите пароль" required>
+              <button type="button" class="password-toggle" data-password-toggle="loginPassword">Показать</button>
+            </div>
           </div>
-          <div id="loginError"></div>
-          <div class="form-actions">
-            <button type="submit" class="auth-submit" id="loginBtn">
-              ${this.loading ? 'Загрузка...' : 'ВОЙТИ'}
-            </button>
-          </div>
-        </form>
-      `;
-    } else {
-      html = `
-        <form id="registerForm" onsubmit="window.game.doRegister(event); return false;">
-          <div class="form-group">
-            <label>Логин</label>
-            <input type="text" id="regUsername" placeholder="player123" required>
-          </div>
-          <div class="form-group">
-            <label>Никнейм</label>
-            <input type="text" id="regNickname" placeholder="Максим" required>
-          </div>
-          <div class="form-group">
-            <label>Пароль</label>
-            <input type="password" id="regPassword" placeholder="••••••••" required>
-          </div>
-          <div class="form-group">
-            <label>Повторить пароль</label>
-            <input type="password" id="regPassword2" placeholder="••••••••" required>
-          </div>
-          <div id="regError"></div>
-          <div class="form-actions">
-            <button type="submit" class="auth-submit" id="regBtn">
-              ${this.loading ? 'Загрузка...' : 'СОЗДАТЬ АККАУНТ'}
-            </button>
-          </div>
+          <div id="loginError" class="auth-message"></div>
+          <button type="submit" class="auth-submit" id="loginBtn">${this.loading ? 'ВХОД...' : 'ВОЙТИ'}</button>
+          <p class="auth-bottom">Нет аккаунта? <button type="button" class="auth-link" data-auth-mode="register">Зарегистрироваться</button></p>
         </form>
       `;
     }
-    
-    return html;
+
+    return `
+      <form id="registerForm" class="auth-form" novalidate>
+        <div class="form-group">
+          <label for="regUsername">Логин</label>
+          <input id="regUsername" name="username" type="text" autocomplete="username" maxlength="20" placeholder="player123" required>
+          <small>3–20 символов: латиница, цифры и _</small>
+        </div>
+        <div class="form-group">
+          <label for="regNickname">Никнейм</label>
+          <input id="regNickname" name="nickname" type="text" autocomplete="nickname" maxlength="16" placeholder="Твой ник" required>
+        </div>
+        <div class="form-group">
+          <label for="regPassword">Пароль</label>
+          <div class="password-wrap">
+            <input id="regPassword" name="password" type="password" autocomplete="new-password" maxlength="64" placeholder="Минимум 8 символов" required>
+            <button type="button" class="password-toggle" data-password-toggle="regPassword">Показать</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="regPassword2">Повтор пароля</label>
+          <div class="password-wrap">
+            <input id="regPassword2" name="password2" type="password" autocomplete="new-password" maxlength="64" placeholder="Повтори пароль" required>
+            <button type="button" class="password-toggle" data-password-toggle="regPassword2">Показать</button>
+          </div>
+        </div>
+        <div id="regError" class="auth-message"></div>
+        <button type="submit" class="auth-submit" id="regBtn">${this.loading ? 'СОЗДАНИЕ...' : 'СОЗДАТЬ АККАУНТ'}</button>
+        <p class="auth-bottom">Уже есть аккаунт? <button type="button" class="auth-link" data-auth-mode="login">Войти</button></p>
+      </form>
+    `;
   }
 
   async doLogin(e) {
     e.preventDefault();
     if (this.loading) return;
+    const form = e.currentTarget;
+    const username = form.username.value.trim();
+    const password = form.password.value;
+    const errorDiv = document.getElementById('loginError');
+    if (!username || !password) {
+      errorDiv.innerHTML = '<div class="auth-error">❌ Заполни логин и пароль</div>';
+      return;
+    }
+
     this.loading = true;
     const btn = document.getElementById('loginBtn');
-    if (btn) btn.disabled = true;
-
-    const username = document.getElementById('loginUsername').value;
-    const password = document.getElementById('loginPassword').value;
+    if (btn) { btn.disabled = true; btn.textContent = 'ВХОД...'; }
+    errorDiv.innerHTML = '';
 
     try {
       const r = await fetch('/api/login', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
         body: JSON.stringify({ username, password })
       });
-      const data = await r.json();
-
-      if (data.error) {
-        this.loading = false;
-        if (btn) btn.disabled = false;
-        const errorDiv = document.getElementById('loginError');
-        if (errorDiv) {
-          errorDiv.innerHTML = `<div class="auth-error">❌ ${data.error}</div>`;
-        }
-        return;
-      }
-
+      const data = await r.json().catch(() => ({}));
+      if (!r.ok || data.error) throw new Error(data.error || `Ошибка входа (${r.status})`);
       this.user = data.user;
       this.loading = false;
       this.enterMenu();
       this.connectSocket();
     } catch (error) {
       this.loading = false;
-      if (btn) btn.disabled = false;
-      this.showToast('Ошибка подключения к серверу');
-      console.error(error);
+      if (btn) { btn.disabled = false; btn.textContent = 'ВОЙТИ'; }
+      errorDiv.innerHTML = `<div class="auth-error">❌ ${this.escapeHtml(error.message || 'Не удалось войти')}</div>`;
     }
   }
 
   async doRegister(e) {
     e.preventDefault();
     if (this.loading) return;
+    const form = e.currentTarget;
+    const username = form.username.value.trim();
+    const nickname = form.nickname.value.trim();
+    const password = form.password.value;
+    const password2 = form.password2.value;
+    const errorDiv = document.getElementById('regError');
+
+    if (!username || !nickname || !password || !password2) {
+      errorDiv.innerHTML = '<div class="auth-error">❌ Заполни все поля</div>';
+      return;
+    }
+    if (password !== password2) {
+      errorDiv.innerHTML = '<div class="auth-error">❌ Пароли не совпадают</div>';
+      return;
+    }
+
     this.loading = true;
     const btn = document.getElementById('regBtn');
-    if (btn) btn.disabled = true;
-
-    const username = document.getElementById('regUsername').value;
-    const nickname = document.getElementById('regNickname').value;
-    const password = document.getElementById('regPassword').value;
-    const password2 = document.getElementById('regPassword2').value;
+    if (btn) { btn.disabled = true; btn.textContent = 'СОЗДАНИЕ...'; }
+    errorDiv.innerHTML = '';
 
     try {
       const r = await fetch('/api/register', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
         body: JSON.stringify({ username, nickname, password, password2 })
       });
-      const data = await r.json();
-
-      if (data.error) {
-        this.loading = false;
-        if (btn) btn.disabled = false;
-        const errorDiv = document.getElementById('regError');
-        if (errorDiv) {
-          errorDiv.innerHTML = `<div class="auth-error">❌ ${data.error}</div>`;
-        }
-        return;
-      }
-
+      const data = await r.json().catch(() => ({}));
+      if (!r.ok || data.error) throw new Error(data.error || `Ошибка регистрации (${r.status})`);
       this.user = data.user;
       this.loading = false;
-      this.showToast('✅ Аккаунт создан! Добро пожаловать!');
       this.enterMenu();
       this.connectSocket();
     } catch (error) {
       this.loading = false;
-      if (btn) btn.disabled = false;
-      this.showToast('Ошибка подключения к серверу');
-      console.error(error);
+      if (btn) { btn.disabled = false; btn.textContent = 'СОЗДАТЬ АККАУНТ'; }
+      errorDiv.innerHTML = `<div class="auth-error">❌ ${this.escapeHtml(error.message || 'Не удалось зарегистрироваться')}</div>`;
     }
+  }
+
+  escapeHtml(value) {
+    return String(value).replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
   }
 
   enterMenu() { 
@@ -799,6 +802,28 @@ class MafiaGame {
   }
 
   attachHandlers() {
+    document.querySelectorAll('[data-auth-mode]').forEach(btn => {
+      btn.onclick = (ev) => {
+        ev.preventDefault();
+        this.switchAuthMode(btn.dataset.authMode);
+      };
+    });
+
+    const loginForm = document.getElementById('loginForm');
+    if (loginForm) loginForm.onsubmit = (ev) => this.doLogin(ev);
+    const registerForm = document.getElementById('registerForm');
+    if (registerForm) registerForm.onsubmit = (ev) => this.doRegister(ev);
+
+    document.querySelectorAll('[data-password-toggle]').forEach(btn => {
+      btn.onclick = () => {
+        const input = document.getElementById(btn.dataset.passwordToggle);
+        if (!input) return;
+        const show = input.type === 'password';
+        input.type = show ? 'text' : 'password';
+        btn.textContent = show ? 'Скрыть' : 'Показать';
+      };
+    });
+
     if (this.state && this.state.chat) {
       const box = document.getElementById('chatBox');
       if (box) {
