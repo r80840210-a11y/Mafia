@@ -1,9 +1,9 @@
 CREATE TABLE IF NOT EXISTS users (
   id SERIAL PRIMARY KEY,
   username VARCHAR(20) UNIQUE NOT NULL,
-  nickname VARCHAR(16) NOT NULL,
-  password TEXT NOT NULL,
-  avatar VARCHAR(10) DEFAULT '👤',
+  nickname VARCHAR(16) UNIQUE NOT NULL,
+  password_hash TEXT NOT NULL,
+  avatar VARCHAR(10) DEFAULT '😎',
   coins INT DEFAULT 100,
   skins TEXT DEFAULT '[]',
   emotes TEXT DEFAULT '[]',
@@ -14,8 +14,10 @@ CREATE TABLE IF NOT EXISTS users (
   kills INT DEFAULT 0,
   checks INT DEFAULT 0,
   saves INT DEFAULT 0,
+  last_survivor INT DEFAULT 0,
   rating INT DEFAULT 1000,
   favorite_role VARCHAR(20),
+  last_login TIMESTAMP,
   created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP DEFAULT NOW()
 );
@@ -23,7 +25,7 @@ CREATE TABLE IF NOT EXISTS users (
 CREATE TABLE IF NOT EXISTS sessions (
   id SERIAL PRIMARY KEY,
   user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  sid VARCHAR(64) UNIQUE NOT NULL,
+  token_hash VARCHAR(64) UNIQUE NOT NULL,
   expires_at TIMESTAMP NOT NULL,
   created_at TIMESTAMP DEFAULT NOW()
 );
@@ -31,15 +33,15 @@ CREATE TABLE IF NOT EXISTS sessions (
 CREATE TABLE IF NOT EXISTS game_results (
   id SERIAL PRIMARY KEY,
   user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  game_id VARCHAR(64),
-  role VARCHAR(20),
-  team VARCHAR(20),
-  survived BOOLEAN,
-  coins_earned INT,
-  rating_change INT,
+  role VARCHAR(30),
+  won BOOLEAN NOT NULL DEFAULT FALSE,
+  kills INT DEFAULT 0,
+  checks INT DEFAULT 0,
+  saves INT DEFAULT 0,
+  votes_cast INT DEFAULT 0,
   created_at TIMESTAMP DEFAULT NOW()
 );
 
-CREATE INDEX IF NOT EXISTS idx_sessions_sid ON sessions(sid);
+CREATE INDEX IF NOT EXISTS idx_sessions_token_hash ON sessions(token_hash);
 CREATE INDEX IF NOT EXISTS idx_sessions_expires ON sessions(expires_at);
 CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);

@@ -270,5 +270,5 @@ async function awardCoins(userId, survived, won, killed) {
   }
 }
 
-// Экспортируем функцию
-module.exports = { awardCoins };
+// Экспортируем серверную игру и награды
+module.exports = { attach, awardCoins };

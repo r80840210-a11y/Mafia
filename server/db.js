@@ -24,4 +24,4 @@ async function saveResults(rows) {
     await c.query('COMMIT');
   } catch (e) { await c.query('ROLLBACK'); console.error('saveResults', e.message); } finally { c.release(); }
 }
-module.exports = { pool, q, init, saveResults };
+module.exports = { pool, q, query: q, init, saveResults };

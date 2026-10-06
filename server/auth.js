@@ -110,70 +110,45 @@ router.get('/leaderboard', need, wrap(async (req, res) => {
   res.json({ rows: r.rows });
 }));
 router.use((req, res) => res.status(404).json({ error: 'Не найдено' }));
+router.post('/buy-item', need, wrap(async (req, res) => {
+  const { type, id, price } = req.body || {};
+  const numericPrice = Number(price);
+  if (!['skin', 'emote', 'frame'].includes(type) || typeof id !== 'string' ||
+      !Number.isFinite(numericPrice) || numericPrice <= 0 || numericPrice > 1000000) {
+    return res.status(400).json({ error: 'Неправильные параметры' });
+  }
+
+  const r = await db.q('SELECT coins, skins, emotes, frames FROM users WHERE id=$1', [req.user.id]);
+  if (!r.rows.length) return res.status(404).json({ error: 'Пользователь не найден' });
+
+  const u = r.rows[0];
+  const coins = Number(u.coins || 0);
+  const parseList = v => {
+    if (Array.isArray(v)) return v;
+    try { return JSON.parse(v || '[]'); } catch (_) { return []; }
+  };
+  const skins = parseList(u.skins);
+  const emotes = parseList(u.emotes);
+  const frames = parseList(u.frames);
+  const lists = { skin: skins, emote: emotes, frame: frames };
+  const list = lists[type];
+
+  if (list.includes(id)) return res.status(409).json({ error: 'Предмет уже куплен' });
+  if (coins < numericPrice) return res.status(400).json({ error: 'Недостаточно монет' });
+
+  list.push(id);
+  const updated = await db.q(
+    'UPDATE users SET coins=$1, skins=$2, emotes=$3, frames=$4, updated_at=now() WHERE id=$5 RETURNING coins, skins, emotes, frames',
+    [coins - numericPrice, JSON.stringify(skins), JSON.stringify(emotes), JSON.stringify(frames), req.user.id]
+  );
+
+  const x = updated.rows[0];
+  res.json({
+    coins: x.coins,
+    skins: parseList(x.skins),
+    emotes: parseList(x.emotes),
+    frames: parseList(x.frames)
+  });
+}));
+
 module.exports = { router, userByToken, parseCookies, AVATARS };
-
-// 💰 Покупка предметов в магазине
-app.post('/api/buy-item', authenticateUser, async (req, res) => {
-  const { type, id, price } = req.body;
-  if (!type || !id || !price) return res.json({ error: 'Неправильные параметры' });
-  
-  try {
-    const user = await db.query('SELECT coins, skins, emotes, frames FROM users WHERE id = $1', [req.user.id]);
-    if (!user.rows.length) return res.json({ error: 'Пользователь не найден' });
-    
-    const userData = user.rows[0];
-    const coins = userData.coins || 0;
-    let skins = userData.skins || [];
-    let emotes = userData.emotes || [];
-    let frames = userData.frames || [];
-    
-    // Парсим JSON если строка
-    if (typeof skins === 'string') skins = JSON.parse(skins || '[]');
-    if (typeof emotes === 'string') emotes = JSON.parse(emotes || '[]');
-    if (typeof frames === 'string') frames = JSON.parse(frames || '[]');
-    
-    // Проверяем баланс
-    if (coins < price) return res.json({ error: 'Недостаточно монет' });
-    
-    // Проверяем что предмет не уже куплен
-    let itemList = [];
-    if (type === 'skin') itemList = skins;
-    else if (type === 'emote') itemList = emotes;
-    else if (type === 'frame') itemList = frames;
-    
-    if (itemList.includes(id)) return res.json({ error: 'Предмет уже куплен' });
-    
-    // Добавляем предмет и вычитаем монеты
-    itemList.push(id);
-    const newCoins = coins - price;
-    
-    const result = await db.query(
-      'UPDATE users SET coins = $1, skins = $2, emotes = $3, frames = $4 WHERE id = $5 RETURNING *',
-      [newCoins, JSON.stringify(skins), JSON.stringify(emotes), JSON.stringify(frames), req.user.id]
-    );
-    
-    const updatedUser = result.rows[0];
-    res.json({
-      coins: updatedUser.coins,
-      skins: JSON.parse(updatedUser.skins || '[]'),
-      emotes: JSON.parse(updatedUser.emotes || '[]'),
-      frames: JSON.parse(updatedUser.frames || '[]')
-    });
-  } catch (e) {
-    console.error('Buy item error:', e);
-    res.json({ error: 'Ошибка при покупке' });
-  }
-});
-
-// 📊 Лидерборд с монетами
-app.get('/api/leaderboard', async (req, res) => {
-  try {
-    const result = await db.query(
-      'SELECT nickname, rating, coins, games_won FROM users ORDER BY rating DESC LIMIT 20'
-    );
-    res.json({ users: result.rows });
-  } catch (e) {
-    console.error('Leaderboard error:', e);
-    res.json({ error: 'Ошибка загрузки лидерборда' });
-  }
-});
