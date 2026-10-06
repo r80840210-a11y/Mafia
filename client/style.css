@@ -229,3 +229,181 @@ input:focus,select:focus,textarea:focus{border-color:var(--purple);box-shadow:0 
   .room-info{grid-template-columns:1fr}
   .players-section{grid-template-columns:repeat(auto-fill,minmax(100px,1fr))}
 }
+
+/* ==================== МАГАЗИН ====================*/
+.shop-screen {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 100%);
+  padding: 20px;
+  color: white;
+}
+
+.shop-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  padding-bottom: 20px;
+  border-bottom: 2px solid var(--border);
+}
+
+.shop-header h1 {
+  font-size: 32px;
+  font-weight: 900;
+  background: linear-gradient(90deg, var(--amber), var(--yellow));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.shop-content {
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 10px;
+}
+
+.shop-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.shop-content::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+}
+
+.shop-content::-webkit-scrollbar-thumb {
+  background: var(--purple);
+  border-radius: 4px;
+}
+
+.shop-section {
+  margin-bottom: 40px;
+}
+
+.shop-section h2 {
+  font-size: 24px;
+  margin-bottom: 20px;
+  color: var(--amber);
+  text-shadow: 0 0 10px rgba(245, 158, 11, 0.3);
+}
+
+.shop-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 15px;
+}
+
+.shop-item {
+  background: linear-gradient(135deg, rgba(26, 40, 71, 0.8) 0%, rgba(45, 27, 105, 0.4) 100%);
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  padding: 15px;
+  text-align: center;
+  transition: all 0.3s;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.shop-item::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(90deg, var(--amber), var(--purple));
+  border-radius: 12px;
+  opacity: 0;
+  transition: opacity 0.3s;
+  z-index: -1;
+}
+
+.shop-item:hover {
+  transform: translateY(-5px);
+  border-color: var(--purple);
+  box-shadow: 0 10px 30px rgba(147, 51, 234, 0.3);
+}
+
+.shop-item:hover::before {
+  opacity: 0.1;
+}
+
+.shop-item.owned {
+  border-color: var(--green);
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.15) 0%, rgba(34, 197, 94, 0.05) 100%);
+}
+
+.shop-avatar,
+.shop-emoji,
+.shop-frame {
+  font-size: 48px;
+  margin-bottom: 10px;
+  animation: bounce 1s ease-in-out infinite;
+}
+
+.shop-name {
+  font-weight: 700;
+  font-size: 13px;
+  margin-bottom: 8px;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.shop-price {
+  font-size: 14px;
+  color: var(--amber);
+  font-weight: 700;
+  margin-bottom: 10px;
+  text-shadow: 0 0 10px rgba(245, 158, 11, 0.3);
+}
+
+.shop-buy {
+  width: 100%;
+  padding: 8px;
+  background: linear-gradient(135deg, var(--purple), #7c3aed);
+  border: none;
+  border-radius: 6px;
+  color: white;
+  font-weight: 700;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.shop-buy:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(147, 51, 234, 0.4);
+}
+
+.shop-buy:active {
+  transform: scale(0.95);
+}
+
+.shop-owned {
+  width: 100%;
+  padding: 8px;
+  background: rgba(34, 197, 94, 0.2);
+  border: 2px solid var(--green);
+  border-radius: 6px;
+  color: var(--green);
+  font-weight: 700;
+  font-size: 12px;
+}
+
+/* Кнопки в меню */
+.buttons {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.buttons button {
+  flex: 1;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+

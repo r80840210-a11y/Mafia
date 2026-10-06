@@ -7,6 +7,27 @@ class MafiaGame {
     this.mode = 'auth';
     this.authMode = 'login';
     this.loading = false;
+    this.shop = {
+      skins: [
+        { id: 'skin_dark', name: '🌑 Dark Mode', price: 100, avatar: '🌑' },
+        { id: 'skin_gold', name: '⭐ Gold Mode', price: 250, avatar: '⭐' },
+        { id: 'skin_fire', name: '🔥 Fire Mode', price: 300, avatar: '🔥' },
+        { id: 'skin_ice', name: '❄️ Ice Mode', price: 300, avatar: '❄️' },
+        { id: 'skin_ghost', name: '👻 Ghost Mode', price: 200, avatar: '👻' },
+      ],
+      emotes: [
+        { id: 'emote_laugh', name: '😂 Смехотун', price: 50, emoji: '😂' },
+        { id: 'emote_skull', name: '💀 Жертва', price: 100, emoji: '💀' },
+        { id: 'emote_gun', name: '🔫 Убийца', price: 100, emoji: '🔫' },
+        { id: 'emote_think', name: '🤔 Детектив', price: 100, emoji: '🤔' },
+        { id: 'emote_crown', name: '👑 Король', price: 150, emoji: '👑' },
+      ],
+      frames: [
+        { id: 'frame_gold', name: '🟡 Золотая рамка', price: 200 },
+        { id: 'frame_purple', name: '🟣 Фиолетовая рамка', price: 200 },
+        { id: 'frame_red', name: '🔴 Красная рамка', price: 200 },
+      ]
+    };
     this.render();
     this.checkAuth();
   }
@@ -33,7 +54,7 @@ class MafiaGame {
     this.socket.on('state', d => { this.state = d; this.render(); });
     this.socket.on('roleAssigned', () => this.play('role'));
     this.socket.on('playerDied', d => this.play('death'));
-    this.socket.on('gameEnded', d => { this.play('win'); this.render(); });
+    this.socket.on('gameEnded', d => { this.play('win'); this.user.coins = d.coinsEarned; this.render(); });
     this.socket.on('phaseChanged', d => this.play('phase'));
     this.socket.on('chat', d => { if (!this.state.chat[d.ch]) this.state.chat[d.ch] = []; this.state.chat[d.ch].push(d); this.render(); });
     this.socket.on('kick', d => { alert(d.reason); this.enterMenu(); });
@@ -50,6 +71,7 @@ class MafiaGame {
     else if (this.mode === 'menu') app.innerHTML = this.renderMenu();
     else if (this.mode === 'lobby') app.innerHTML = this.renderLobby();
     else if (this.mode === 'game') app.innerHTML = this.renderGame();
+    else if (this.mode === 'shop') app.innerHTML = this.renderShop();
     else if (this.mode === 'local') app.innerHTML = this.renderLocal();
     
     document.body.innerHTML = '';
@@ -77,7 +99,7 @@ class MafiaGame {
               <button class="auth-tab ${isLogin ? 'active' : ''}" onclick="window.game.switchAuthMode('login')">Вход</button>
               <button class="auth-tab ${!isLogin ? 'active' : ''}" onclick="window.game.switchAuthMode('register')">Регистрация</button>
             </div>
-            <div id="authContent"></div>
+            <div id="authContent">${this.renderAuthContent()}</div>
           </div>
         </div>
       </div>
@@ -86,7 +108,11 @@ class MafiaGame {
 
   switchAuthMode(mode) {
     this.authMode = mode;
-    this.render();
+    const content = document.getElementById('authContent');
+    if (content) {
+      content.innerHTML = this.renderAuthContent();
+      this.attachHandlers();
+    }
   }
 
   renderAuthContent() {
@@ -95,7 +121,7 @@ class MafiaGame {
     
     if (isLogin) {
       html = `
-        <form id="loginForm" onsubmit="window.game.doLogin(event)">
+        <form id="loginForm" onsubmit="window.game.doLogin(event); return false;">
           <div class="form-group">
             <label>Логин</label>
             <input type="text" id="loginUsername" placeholder="player123" required>
@@ -106,7 +132,7 @@ class MafiaGame {
           </div>
           <div id="loginError"></div>
           <div class="form-actions">
-            <button type="submit" class="auth-submit" ${this.loading ? 'disabled' : ''}>
+            <button type="submit" class="auth-submit" id="loginBtn">
               ${this.loading ? 'Загрузка...' : 'ВОЙТИ'}
             </button>
           </div>
@@ -114,7 +140,7 @@ class MafiaGame {
       `;
     } else {
       html = `
-        <form id="registerForm" onsubmit="window.game.doRegister(event)">
+        <form id="registerForm" onsubmit="window.game.doRegister(event); return false;">
           <div class="form-group">
             <label>Логин</label>
             <input type="text" id="regUsername" placeholder="player123" required>
@@ -133,7 +159,7 @@ class MafiaGame {
           </div>
           <div id="regError"></div>
           <div class="form-actions">
-            <button type="submit" class="auth-submit" ${this.loading ? 'disabled' : ''}>
+            <button type="submit" class="auth-submit" id="regBtn">
               ${this.loading ? 'Загрузка...' : 'СОЗДАТЬ АККАУНТ'}
             </button>
           </div>
@@ -146,8 +172,10 @@ class MafiaGame {
 
   async doLogin(e) {
     e.preventDefault();
+    if (this.loading) return;
     this.loading = true;
-    this.render();
+    const btn = document.getElementById('loginBtn');
+    if (btn) btn.disabled = true;
 
     const username = document.getElementById('loginUsername').value;
     const password = document.getElementById('loginPassword').value;
@@ -162,11 +190,11 @@ class MafiaGame {
 
       if (data.error) {
         this.loading = false;
+        if (btn) btn.disabled = false;
         const errorDiv = document.getElementById('loginError');
         if (errorDiv) {
-          errorDiv.innerHTML = `<div class="auth-error">${data.error}</div>`;
+          errorDiv.innerHTML = `<div class="auth-error">❌ ${data.error}</div>`;
         }
-        this.showToast(data.error);
         return;
       }
 
@@ -176,6 +204,7 @@ class MafiaGame {
       this.connectSocket();
     } catch (error) {
       this.loading = false;
+      if (btn) btn.disabled = false;
       this.showToast('Ошибка подключения к серверу');
       console.error(error);
     }
@@ -183,8 +212,10 @@ class MafiaGame {
 
   async doRegister(e) {
     e.preventDefault();
+    if (this.loading) return;
     this.loading = true;
-    this.render();
+    const btn = document.getElementById('regBtn');
+    if (btn) btn.disabled = true;
 
     const username = document.getElementById('regUsername').value;
     const nickname = document.getElementById('regNickname').value;
@@ -201,21 +232,22 @@ class MafiaGame {
 
       if (data.error) {
         this.loading = false;
+        if (btn) btn.disabled = false;
         const errorDiv = document.getElementById('regError');
         if (errorDiv) {
-          errorDiv.innerHTML = `<div class="auth-error">${data.error}</div>`;
+          errorDiv.innerHTML = `<div class="auth-error">❌ ${data.error}</div>`;
         }
-        this.showToast(data.error);
         return;
       }
 
       this.user = data.user;
       this.loading = false;
-      this.showToast('Аккаунт создан! Добро пожаловать!');
+      this.showToast('✅ Аккаунт создан! Добро пожаловать!');
       this.enterMenu();
       this.connectSocket();
     } catch (error) {
       this.loading = false;
+      if (btn) btn.disabled = false;
       this.showToast('Ошибка подключения к серверу');
       console.error(error);
     }
@@ -234,18 +266,127 @@ class MafiaGame {
           <h1>🎭</h1>
           <h1>MAFIA</h1>
           <p class="subtitle">ONLINE</p>
-          <div style="margin-bottom:20px;color:rgba(255,255,255,0.6)">Добро пожаловать, ${this.user.nickname}!</div>
+          <div style="margin-bottom:20px;color:rgba(255,255,255,0.6)">Добро пожаловать, <strong>${this.user.nickname}</strong>!</div>
+          <div style="display:flex;gap:10px;justify-content:center;margin-bottom:30px;font-size:18px;font-weight:700">
+            <div style="background:rgba(255,193,7,0.2);border:2px solid var(--amber);padding:10px 20px;border-radius:8px">💰 ${this.user.coins || 0} монет</div>
+            <div style="background:rgba(147,51,234,0.2);border:2px solid var(--purple);padding:10px 20px;border-radius:8px">⭐ ${this.user.rating || 1000} рейтинг</div>
+          </div>
           <div class="menu-buttons">
             <button onclick="window.game.quickPlay()">⚡ БЫСТРАЯ ИГРА</button>
             <button onclick="window.game.createRoom()">🎮 СОЗДАТЬ КОМНАТУ</button>
             <button onclick="window.game.joinRoom()">🔑 ПРИСОЕДИНИТЬСЯ</button>
             <button onclick="window.game.localGame()">💻 ЛОКАЛЬНАЯ ИГРА</button>
+            <button onclick="window.game.openShop()">🛍️ МАГАЗИН</button>
             <button onclick="window.game.showProfile()">👤 ПРОФИЛЬ</button>
             <button onclick="window.game.logout()" style="background:linear-gradient(135deg,#dc2626,#991b1b)">🚪 ВЫХОД</button>
           </div>
         </div>
       </div>
     `;
+  }
+
+  openShop() {
+    this.mode = 'shop';
+    this.render();
+  }
+
+  renderShop() {
+    return `
+      <div class="shop-screen">
+        <div class="shop-header">
+          <h1>🛍️ МАГАЗИН</h1>
+          <div style="display:flex;gap:15px;align-items:center">
+            <div style="background:rgba(255,193,7,0.2);border:2px solid var(--amber);padding:8px 16px;border-radius:8px;font-weight:700">💰 ${this.user.coins || 0}</div>
+            <button onclick="window.game.enterMenu()" style="padding:10px 20px">← Назад</button>
+          </div>
+        </div>
+        
+        <div class="shop-content">
+          <div class="shop-section">
+            <h2>🌑 Скины аватара</h2>
+            <div class="shop-grid">
+              ${this.shop.skins.map(skin => `
+                <div class="shop-item ${this.user.skins && this.user.skins.includes(skin.id) ? 'owned' : ''}">
+                  <div class="shop-avatar">${skin.avatar}</div>
+                  <div class="shop-name">${skin.name}</div>
+                  <div class="shop-price">💰 ${skin.price}</div>
+                  ${this.user.skins && this.user.skins.includes(skin.id) 
+                    ? '<div class="shop-owned">✓ У вас</div>'
+                    : `<button class="shop-buy" onclick="window.game.buyItem('skin', '${skin.id}', ${skin.price})">Купить</button>`
+                  }
+                </div>
+              `).join('')}
+            </div>
+          </div>
+
+          <div class="shop-section">
+            <h2>😂 Эмоции</h2>
+            <div class="shop-grid">
+              ${this.shop.emotes.map(emote => `
+                <div class="shop-item ${this.user.emotes && this.user.emotes.includes(emote.id) ? 'owned' : ''}">
+                  <div class="shop-emoji">${emote.emoji}</div>
+                  <div class="shop-name">${emote.name}</div>
+                  <div class="shop-price">💰 ${emote.price}</div>
+                  ${this.user.emotes && this.user.emotes.includes(emote.id)
+                    ? '<div class="shop-owned">✓ У вас</div>'
+                    : `<button class="shop-buy" onclick="window.game.buyItem('emote', '${emote.id}', ${emote.price})">Купить</button>`
+                  }
+                </div>
+              `).join('')}
+            </div>
+          </div>
+
+          <div class="shop-section">
+            <h2>🟡 Рамки профиля</h2>
+            <div class="shop-grid">
+              ${this.shop.frames.map(frame => `
+                <div class="shop-item ${this.user.frames && this.user.frames.includes(frame.id) ? 'owned' : ''}">
+                  <div class="shop-frame">🖼️</div>
+                  <div class="shop-name">${frame.name}</div>
+                  <div class="shop-price">💰 ${frame.price}</div>
+                  ${this.user.frames && this.user.frames.includes(frame.id)
+                    ? '<div class="shop-owned">✓ У вас</div>'
+                    : `<button class="shop-buy" onclick="window.game.buyItem('frame', '${frame.id}', ${frame.price})">Купить</button>`
+                  }
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  async buyItem(type, id, price) {
+    if (this.user.coins < price) {
+      this.showToast(`❌ Недостаточно монет! Нужно ${price}, есть ${this.user.coins}`);
+      return;
+    }
+
+    try {
+      const r = await fetch('/api/buy-item', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type, id, price })
+      });
+      const data = await r.json();
+
+      if (data.error) {
+        this.showToast(`❌ ${data.error}`);
+        return;
+      }
+
+      this.user.coins = data.coins;
+      if (type === 'skin') this.user.skins = data.skins;
+      else if (type === 'emote') this.user.emotes = data.emotes;
+      else if (type === 'frame') this.user.frames = data.frames;
+
+      this.showToast(`✅ Предмет куплен! 💰 ${this.user.coins} осталось`);
+      this.render();
+    } catch (error) {
+      this.showToast('❌ Ошибка при покупке');
+      console.error(error);
+    }
   }
 
   async quickPlay() {
@@ -269,29 +410,20 @@ class MafiaGame {
         <div class="form-group">
           <label>Максимум игроков</label>
           <select id="maxPlayers">
-            <option value="4">4</option>
-            <option value="5">5</option>
-            <option value="6" selected>6</option>
-            <option value="7">7</option>
-            <option value="8">8</option>
-            <option value="9">9</option>
-            <option value="10">10</option>
+            <option value="4">4</option><option value="5">5</option><option value="6" selected>6</option>
+            <option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option>
           </select>
         </div>
         <div class="form-group">
           <label>Режим</label>
           <select id="mode">
-            <option value="classic">Классика</option>
-            <option value="fast">Быстрая</option>
-            <option value="chaos">Хаос</option>
-            <option value="friends">Только друзья</option>
+            <option value="classic">Классика</option><option value="fast">Быстрая</option>
+            <option value="chaos">Хаос</option><option value="friends">Только друзья</option>
           </select>
         </div>
-        <div class="modal-content" style="border:none;padding:0;margin-top:20px">
-          <div class="buttons">
-            <button onclick="window.game.doCreateRoom()">✓ Создать</button>
-            <button onclick="this.closest('.modal').remove()" style="background:linear-gradient(135deg,#6b7280,#4b5563)">✕ Отмена</button>
-          </div>
+        <div class="buttons" style="margin-top:20px">
+          <button onclick="window.game.doCreateRoom()">✓ Создать</button>
+          <button onclick="this.closest('.modal').remove()" style="background:linear-gradient(135deg,#6b7280,#4b5563)">✕ Отмена</button>
         </div>
       </div>
     `;
@@ -441,10 +573,14 @@ class MafiaGame {
 👤 ПРОФИЛЬ
 ━━━━━━━━━━━━━━━━━━━━
 Никнейм: ${this.user.nickname}
-Рейтинг: ${this.user.rating}
-Игры: ${this.user.games_played}
-Побед: ${this.user.games_won}
-Поражений: ${this.user.games_lost}
+💰 Монет: ${this.user.coins || 0}
+⭐ Рейтинг: ${this.user.rating}
+🎮 Игры: ${this.user.games_played}
+🏆 Побед: ${this.user.games_won}
+💥 Поражений: ${this.user.games_lost}
+🔫 Убийств: ${this.user.kills}
+🔎 Проверок: ${this.user.checks}
+💉 Спасений: ${this.user.saves}
     `);
   }
 
@@ -469,7 +605,7 @@ class MafiaGame {
           <div class="room-code">
             <div class="label">КОД КОМНАТЫ</div>
             <div class="code">${this.state.code}</div>
-            <button onclick="navigator.clipboard.writeText('${this.state.code}');window.game.showToast('Код скопирован!')">📋 Копировать</button>
+            <button onclick="navigator.clipboard.writeText('${this.state.code}');window.game.showToast('✅ Код скопирован!')">📋 Копировать</button>
           </div>
           <div class="settings-panel">
             <h3>⚙️ Параметры</h3>
@@ -663,15 +799,6 @@ class MafiaGame {
   }
 
   attachHandlers() {
-    // Подключить контент аутентификации
-    if (this.mode === 'auth') {
-      const authContent = document.getElementById('authContent');
-      if (authContent) {
-        authContent.innerHTML = this.renderAuthContent();
-      }
-    }
-
-    // Обновить чат
     if (this.state && this.state.chat) {
       const box = document.getElementById('chatBox');
       if (box) {
@@ -690,8 +817,7 @@ class MafiaGame {
     if (this.state?.endsAt) this.timerId = setInterval(() => this.render(), 500);
   }
 
-  loadSettings() { this.settings = JSON.parse(localStorage.getItem('mafiaSettings') || '{"sound":true,"music":false}'); }
-  play(sound) { if (this.settings.sound) console.log('🔊 ' + sound); }
+  play(sound) { console.log('🔊 ' + sound); }
 }
 
 if (!window.game) window.game = new MafiaGame();

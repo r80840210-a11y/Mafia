@@ -1,38 +1,45 @@
 CREATE TABLE IF NOT EXISTS users (
-  id            SERIAL PRIMARY KEY,
-  username      VARCHAR(20) NOT NULL UNIQUE,        -- логин (в нижнем регистре)
-  nickname      VARCHAR(16) NOT NULL,
-  password_hash TEXT NOT NULL,                      -- bcrypt, пароль НЕ хранится
-  created_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
-  last_login    TIMESTAMPTZ,
-  games_played  INT NOT NULL DEFAULT 0,
-  games_won     INT NOT NULL DEFAULT 0,
-  games_lost    INT NOT NULL DEFAULT 0,
-  rating        INT NOT NULL DEFAULT 1000,
+  id SERIAL PRIMARY KEY,
+  username VARCHAR(20) UNIQUE NOT NULL,
+  nickname VARCHAR(16) NOT NULL,
+  password TEXT NOT NULL,
+  avatar VARCHAR(10) DEFAULT '👤',
+  coins INT DEFAULT 100,
+  skins TEXT DEFAULT '[]',
+  emotes TEXT DEFAULT '[]',
+  frames TEXT DEFAULT '[]',
+  games_played INT DEFAULT 0,
+  games_won INT DEFAULT 0,
+  games_lost INT DEFAULT 0,
+  kills INT DEFAULT 0,
+  checks INT DEFAULT 0,
+  saves INT DEFAULT 0,
+  rating INT DEFAULT 1000,
   favorite_role VARCHAR(20),
-  avatar        VARCHAR(8) NOT NULL DEFAULT '😎',
-  kills         INT NOT NULL DEFAULT 0,
-  checks        INT NOT NULL DEFAULT 0,
-  saves         INT NOT NULL DEFAULT 0,
-  last_survivor INT NOT NULL DEFAULT 0,
-  settings      JSONB NOT NULL DEFAULT '{"sound":true,"music":false,"lang":"ru"}'
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
 );
-CREATE UNIQUE INDEX IF NOT EXISTS users_nick_lower ON users (lower(nickname));
+
 CREATE TABLE IF NOT EXISTS sessions (
-  token_hash CHAR(64) PRIMARY KEY,
-  user_id    INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  expires_at TIMESTAMPTZ NOT NULL
+  id SERIAL PRIMARY KEY,
+  user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  sid VARCHAR(64) UNIQUE NOT NULL,
+  expires_at TIMESTAMP NOT NULL,
+  created_at TIMESTAMP DEFAULT NOW()
 );
-CREATE INDEX IF NOT EXISTS sessions_user ON sessions (user_id);
+
 CREATE TABLE IF NOT EXISTS game_results (
-  id         SERIAL PRIMARY KEY,
-  user_id    INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  role       VARCHAR(20) NOT NULL,
-  won        BOOLEAN NOT NULL,
-  kills      INT NOT NULL DEFAULT 0,
-  checks     INT NOT NULL DEFAULT 0,
-  saves      INT NOT NULL DEFAULT 0,
-  votes_cast INT NOT NULL DEFAULT 0,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  id SERIAL PRIMARY KEY,
+  user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  game_id VARCHAR(64),
+  role VARCHAR(20),
+  team VARCHAR(20),
+  survived BOOLEAN,
+  coins_earned INT,
+  rating_change INT,
+  created_at TIMESTAMP DEFAULT NOW()
 );
-CREATE INDEX IF NOT EXISTS results_user ON game_results (user_id);
+
+CREATE INDEX IF NOT EXISTS idx_sessions_sid ON sessions(sid);
+CREATE INDEX IF NOT EXISTS idx_sessions_expires ON sessions(expires_at);
+CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);

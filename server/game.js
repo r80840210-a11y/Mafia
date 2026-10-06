@@ -243,3 +243,32 @@ function attach(server) {
   });
 }
 module.exports = { attach };
+
+async function awardCoins(userId, survived, won, killed) {
+  try {
+    // Базовые монеты за игру
+    let coins = survived ? 25 : 10;
+    
+    // Бонус за победу
+    if (won) coins += 50;
+    
+    // Бонус за убийства (если убил за игру)
+    if (killed && killed > 0) coins += killed * 15;
+    
+    // Макс 200 монет за игру
+    coins = Math.min(coins, 200);
+    
+    const result = await db.query(
+      'UPDATE users SET coins = coins + $1 WHERE id = $2 RETURNING coins',
+      [coins, userId]
+    );
+    
+    return coins;
+  } catch (e) {
+    console.error('Award coins error:', e);
+    return 0;
+  }
+}
+
+// Экспортируем функцию
+module.exports = { awardCoins };
